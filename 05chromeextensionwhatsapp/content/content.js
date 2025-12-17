@@ -432,6 +432,21 @@
     return title.trim() || 'chat_desconhecido';
   }
 
+  // Helper function to check if phone numbers match
+  // Uses last 8 digits for robust matching across different formats
+  function phoneNumbersMatch(digits1, digits2, matchLength = 8) {
+    const clean1 = String(digits1 || '').replace(/\D/g, '');
+    const clean2 = String(digits2 || '').replace(/\D/g, '');
+    
+    if (!clean1 || !clean2) return false;
+    
+    const last1 = clean1.slice(-matchLength);
+    const last2 = clean2.slice(-matchLength);
+    
+    // Bidirectional matching: either number contains the other's suffix
+    return clean1.includes(last2) || clean2.includes(last1);
+  }
+
 async function waitUntilChatIsCorrect(phoneDigits, timeout = 12000, maxRetries = 3) {
   const start = Date.now();
   const initialTitle = getChatTitle();
@@ -464,14 +479,11 @@ async function waitUntilChatIsCorrect(phoneDigits, timeout = 12000, maxRetries =
     debugLog(`Checking chat: "${currentTitle}" (digits: ${titleDigits})`);
     
     // Primary validation: Check if target digits are in the title
-    // Use last 8 digits for more robust matching
-    const targetLast8 = target.slice(-8);
-    const titleLast8 = titleDigits.slice(-8);
-    
-    if (titleDigits.includes(targetLast8) || targetLast8.includes(titleLast8)) {
+    // Use helper function for consistent matching logic
+    if (phoneNumbersMatch(titleDigits, phoneDigits)) {
       debugLog('✅ Chat title matches target phone number!');
       debugLog('  Title digits:', titleDigits);
-      debugLog('  Target match:', targetLast8);
+      debugLog('  Target digits:', phoneDigits);
       return true;
     }
     
@@ -1266,7 +1278,7 @@ async function attachMediaAndDraft(mediaPayload, captionText) {
     const insertedText = box.textContent || box.innerText || '';
     debugLog('  Verification - box content:', insertedText);
     
-    if (!insertedText.includes(digits.slice(-6))) {
+    if (!insertedText.includes(digits.slice(-8))) {
       debugLog('⚠️ Text insertion may have failed');
     }
 
@@ -1369,13 +1381,20 @@ async function attachMediaAndDraft(mediaPayload, captionText) {
     debugLog('🌐 Opening chat via URL method...');
     debugLog('  Phone number:', digits);
     
-    // Ensure we have a valid phone number
-    if (!digits || digits.length < 8) {
+    // Validate phone number contains only digits (security check)
+    const cleanDigits = String(digits).replace(/\D/g, '');
+    if (!cleanDigits || cleanDigits.length < 8) {
       throw new Error('Invalid phone number for URL method');
     }
     
+    // Additional security check: ensure it's a reasonable phone number length
+    if (cleanDigits.length > 15) {
+      throw new Error('Phone number too long (max 15 digits)');
+    }
+    
     // Format: https://web.whatsapp.com/send?phone=XXXXXXXXXX
-    const url = `https://web.whatsapp.com/send?phone=${digits}`;
+    // Use encodeURIComponent for extra safety
+    const url = `https://web.whatsapp.com/send?phone=${encodeURIComponent(cleanDigits)}`;
     debugLog('  URL:', url);
     
     // Navigate to the URL
