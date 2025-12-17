@@ -432,29 +432,96 @@
     return title.trim() || 'chat_desconhecido';
   }
 
-async function waitUntilChatIsCorrect(phoneDigits, timeout = 12000) {
-  const start = Date.now();
-  const initialTitle = getChatTitle();
-  const target = String(phoneDigits || '').replace(/\D/g, '').slice(-6);
-
-  while (Date.now() - start < timeout) {
-    await sleep(200);
-
-    const currentTitle = getChatTitle();
-    if (!currentTitle || currentTitle === initialTitle) continue;
-
-    const digits = currentTitle.replace(/\D/g, '');
-    if (digits.includes(target)) {
-      return true;
-    }
-
-    // fallback: header mudou + composer existe
-    const composer = findComposer();
-    if (composer && currentTitle !== initialTitle) {
-      return true;
-    }
+  // Helper function to check if phone numbers match
+  // Uses last 8 digits for robust matching across different formats
+  function phoneNumbersMatch(digits1, digits2, matchLength = 8) {
+    const clean1 = String(digits1 || '').replace(/\D/g, '');
+    const clean2 = String(digits2 || '').replace(/\D/g, '');
+    
+    if (!clean1 || !clean2) return false;
+    
+    const last1 = clean1.slice(-matchLength);
+    const last2 = clean2.slice(-matchLength);
+    
+    // Bidirectional matching: either number contains the other's suffix
+    return clean1.includes(last2) || clean2.includes(last1);
   }
 
+async function waitUntilChatIsCorrect(phoneDigits, timeout = 12000, maxRetries = 3) {
+  const start = Date.now();
+  const initialTitle = getChatTitle();
+  const target = String(phoneDigits || '').replace(/\D/g, '').slice(-8);
+  
+  debugLog('waitUntilChatIsCorrect: Starting validation');
+  debugLog('  Initial title:', initialTitle);
+  debugLog('  Target digits (last 8):', target);
+  debugLog('  Full phone digits:', phoneDigits);
+  
+  let retryCount = 0;
+  let lastValidationAttempt = 0;
+  
+  while (Date.now() - start < timeout) {
+    await sleep(200);
+    
+    const currentTitle = getChatTitle();
+    const elapsed = Date.now() - start;
+    
+    // Skip if title hasn't changed yet
+    if (!currentTitle || currentTitle === initialTitle) {
+      if (elapsed % 2000 < 200) { // Log every 2 seconds
+        debugLog(`⏳ Waiting for chat to load... (${Math.floor(elapsed/1000)}s)`);
+      }
+      continue;
+    }
+    
+    // Extract digits from current chat title
+    const titleDigits = currentTitle.replace(/\D/g, '');
+    debugLog(`Checking chat: "${currentTitle}" (digits: ${titleDigits})`);
+    
+    // Primary validation: Check if target digits are in the title
+    // Use helper function for consistent matching logic
+    if (phoneNumbersMatch(titleDigits, phoneDigits)) {
+      debugLog('✅ Chat title matches target phone number!');
+      debugLog('  Title digits:', titleDigits);
+      debugLog('  Target digits:', phoneDigits);
+      return true;
+    }
+    
+    // Retry mechanism: If chat loaded but doesn't match, try again
+    const timeSinceLastValidation = elapsed - lastValidationAttempt;
+    if (timeSinceLastValidation > 1000 && retryCount < maxRetries) {
+      retryCount++;
+      lastValidationAttempt = elapsed;
+      debugLog(`⚠️ Chat title mismatch (attempt ${retryCount}/${maxRetries})`);
+      debugLog('  Current:', titleDigits);
+      debugLog('  Expected:', targetLast8);
+      
+      // Check if composer exists as fallback indicator
+      const composer = findComposer();
+      if (composer) {
+        debugLog('ℹ️ Composer exists, chat may be correct despite title mismatch');
+        
+        // If we've retried enough and composer exists, accept it
+        if (retryCount >= maxRetries) {
+          debugLog('⚠️ Max retries reached, accepting chat with composer present');
+          return true;
+        }
+      }
+    }
+    
+    // Secondary fallback: header changed + composer exists + reasonable time passed
+    if (elapsed > 3000) {
+      const composer = findComposer();
+      if (composer && currentTitle !== initialTitle) {
+        debugLog('✅ Fallback validation passed: header changed + composer exists');
+        return true;
+      }
+    }
+  }
+  
+  debugLog('❌ waitUntilChatIsCorrect timed out');
+  debugLog('  Final title:', getChatTitle());
+  debugLog('  Expected digits:', target);
   return false;
 }
 
@@ -482,13 +549,34 @@ async function waitUntilChatIsCorrect(phoneDigits, timeout = 12000) {
   function findComposer() {
     // Try new findElement helper first (with visibility check)
     const el = findElement('composer');
-    if (el) return el;
+    if (el) {
+      debugLog('✅ Composer found via findElement');
+      return el;
+    }
     
     // Fallback to original implementation
+    debugLog('⚠️ findElement failed, trying fallback method...');
     const cands = querySelectorAll(WA_SELECTORS.composer).filter(el => el && el.isConnected);
-    if (!cands.length) return null;
+    if (!cands.length) {
+      debugLog('❌ No composer candidates found. Selectors tried:', WA_SELECTORS.composer);
+      return null;
+    }
+    
+    debugLog(`Found ${cands.length} composer candidates, checking visibility...`);
     const visible = cands.find(el => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length));
-    return visible || cands[0];
+    
+    if (visible) {
+      debugLog('✅ Visible composer found via fallback');
+      return visible;
+    }
+    
+    if (cands[0]) {
+      debugLog('⚠️ No visible composer, returning first candidate');
+      return cands[0];
+    }
+    
+    debugLog('❌ findComposer failed completely');
+    return null;
   }
 
   // -------------------------
@@ -1092,121 +1180,185 @@ async function attachMediaAndDraft(mediaPayload, captionText) {
     const q = safeText(query).replace(/[^\d+]/g, '');
     const digits = q.replace(/[^\d]/g, '');
     
-    debugLog('openChatBySearch: query original:', query);
-    debugLog('openChatBySearch: dígitos extraídos:', digits);
+    debugLog('═══════════════════════════════════════════════════');
+    debugLog('openChatBySearch: Starting');
+    debugLog('  Original query:', query);
+    debugLog('  Extracted digits:', digits);
+    debugLog('═══════════════════════════════════════════════════');
     
     if (!digits || digits.length < 8) {
-      debugLog('❌ Número inválido (muito curto):', digits);
-      throw new Error('Número inválido.');
+      debugLog('❌ Invalid phone number (too short):', digits);
+      throw new Error('Número inválido: muito curto.');
     }
 
-    // Encontrar caixa de busca
-    debugLog('Procurando caixa de busca...');
-    const box = findElement('searchBox');
+    // Try search-based approach first
+    try {
+      await openChatBySearchInternal(digits);
+      debugLog('✅ openChatBySearch: Search method succeeded');
+      return true;
+    } catch (searchError) {
+      debugLog('⚠️ Search method failed:', searchError.message);
+      debugLog('Attempting URL fallback method...');
+      
+      // Fallback: Try opening via URL
+      try {
+        await openChatByUrl(digits);
+        debugLog('✅ openChatBySearch: URL fallback succeeded');
+        return true;
+      } catch (urlError) {
+        debugLog('❌ URL fallback also failed:', urlError.message);
+        throw new Error('Failed to open chat: both search and URL methods failed.');
+      }
+    }
+  }
+
+  async function openChatBySearchInternal(digits) {
+    // Encontrar caixa de busca com retry
+    debugLog('🔍 Looking for search box...');
+    let box = findElement('searchBox');
     
     if (!box) {
-      debugLog('❌ Caixa de busca não encontrada. Seletores tentados:', WA_SELECTORS.searchBox);
+      debugLog('⚠️ Search box not found on first attempt, retrying...');
+      await sleep(500);
+      box = findElement('searchBox');
+    }
+    
+    if (!box) {
+      debugLog('❌ Search box not found after retry');
+      debugLog('   Selectors tried:', WA_SELECTORS.searchBox);
       throw new Error('Caixa de busca não encontrada.');
     }
     
-    debugLog('✅ Caixa de busca encontrada:', box);
+    debugLog('✅ Search box found:', box.tagName, box.getAttribute('data-tab'));
 
     // Ensure WhatsApp Web main tab is focused
     window.focus();
+    await sleep(150);
+
+    // Limpar busca anterior com múltiplas tentativas
+    debugLog('🧹 Clearing previous search...');
+    box.focus();
+    await sleep(250);
+    
+    // Method 1: execCommand
+    try {
+      document.execCommand('selectAll', false, null);
+      document.execCommand('delete', false, null);
+      debugLog('  Cleared via execCommand');
+    } catch (e) {
+      debugLog('  execCommand clear failed, trying textContent');
+      box.textContent = '';
+    }
+    
+    box.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    box.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(400);
+
+    // Digitar número com método robusto
+    debugLog('⌨️ Typing phone number in search:', digits);
+    box.focus();
     await sleep(100);
+    
+    // Clear again just before typing
+    try {
+      document.execCommand('selectAll', false, null);
+      document.execCommand('insertText', false, digits);
+      debugLog('  Typed via insertText');
+    } catch (e) {
+      debugLog('  insertText failed, using textContent');
+      box.textContent = digits;
+    }
+    
+    // Trigger multiple events to ensure WhatsApp detects the input
+    box.dispatchEvent(new InputEvent('input', { bubbles: true, data: digits }));
+    box.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'Enter' }));
+    box.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    // Verify text was inserted
+    const insertedText = box.textContent || box.innerText || '';
+    debugLog('  Verification - box content:', insertedText);
+    
+    if (!insertedText.includes(digits.slice(-8))) {
+      debugLog('⚠️ Text insertion may have failed');
+    }
 
-    // Limpar busca anterior
-    debugLog('Limpando busca anterior...');
-    box.focus();
-    await sleep(200);
-    document.execCommand('selectAll', false, null);
-    document.execCommand('insertText', false, '');
-    box.dispatchEvent(new InputEvent('input', { bubbles: true }));
-    await sleep(500);
+    // Esperar resultados com tempo adequado
+    debugLog('⏳ Waiting for search results...');
+    await sleep(2500); // Increased wait time for search results
 
-    // Digitar número
-    debugLog('Digitando número na busca:', digits);
-    box.focus();
-    document.execCommand('selectAll', false, null);
-    document.execCommand('insertText', false, digits);
-    box.dispatchEvent(new InputEvent('input', { bubbles: true }));
-
-    // Esperar resultados com mais tempo
-    debugLog('Aguardando resultados da busca...');
-    await sleep(2000);
-
-    const isVisible = (el) => !!(el && el.isConnected && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
-
-    // Buscar resultados
-    debugLog('Procurando resultados...');
-    const rows = querySelectorAll(WA_SELECTORS.searchResults).filter(el => {
+    // Buscar resultados com logging detalhado
+    debugLog('🔎 Searching for matching results...');
+    const allResults = querySelectorAll(WA_SELECTORS.searchResults);
+    debugLog(`  Found ${allResults.length} total search results`);
+    
+    const rows = allResults.filter(el => {
       const text = (el.innerText || '').replace(/\D/g, '');
-      const match = text.includes(digits.slice(-6)) || digits.includes(text.slice(-6));
-      if (match) debugLog('Resultado encontrado:', el.innerText?.slice(0, 50));
+      const match = text.includes(digits.slice(-8)) || digits.includes(text.slice(-8));
+      if (match) {
+        debugLog('  ✓ Match found:', el.innerText?.slice(0, 60));
+      }
       return match;
     });
 
-    debugLog(`Encontrados ${rows.length} resultados correspondentes`);
+    debugLog(`📊 Found ${rows.length} matching results for digits: ${digits.slice(-8)}`);
 
     if (!rows.length) {
-      debugLog('Nenhum resultado exato, tentando clicar no primeiro disponível...');
-      // Tentar clicar no primeiro resultado disponível
+      debugLog('⚠️ No exact match, trying first available result...');
       const anyRow = querySelector(WA_SELECTORS.searchResults);
       if (anyRow) {
-        debugLog('Clicando no primeiro resultado:', anyRow.innerText?.slice(0, 50));
+        debugLog('  Clicking first result:', anyRow.innerText?.slice(0, 60));
         anyRow.click();
-        await sleep(1000);
+        await sleep(1200);
       } else {
-        debugLog('❌ Nenhum resultado na busca');
+        debugLog('❌ No search results found at all');
         throw new Error('Nenhum resultado na busca.');
       }
     } else {
-      debugLog('Clicando no melhor resultado...');
+      debugLog('✅ Clicking best matching result...');
       rows[0].click();
-      await sleep(1000);
+      await sleep(1200);
     }
 
-    // Limpar busca
-    debugLog('Limpando caixa de busca...');
+    // Limpar busca após seleção
+    debugLog('🧹 Clearing search box after selection...');
     try {
       const searchBox = findElement('searchBox');
       if (searchBox) {
         searchBox.focus();
+        await sleep(100);
         document.execCommand('selectAll', false, null);
-        document.execCommand('insertText', false, '');
+        document.execCommand('delete', false, null);
         searchBox.dispatchEvent(new InputEvent('input', { bubbles: true }));
+        debugLog('  Search box cleared');
       }
     } catch (e) {
-      debugLog('Erro ao limpar busca (não crítico):', e);
+      debugLog('  Non-critical error clearing search:', e.message);
     }
 
-    // Configuration: validation parameters
-    const MAX_COMPOSER_CHECK_ATTEMPTS = 20;
+    // VALIDAÇÃO CRÍTICA: Verificar se chat correto foi aberto
+    debugLog('🔍 Validating correct chat opened...');
+    const MAX_COMPOSER_CHECK_ATTEMPTS = 25;
     const COMPOSER_CHECK_DELAY_MS = 300;
-    const VALIDATION_SKIP_THRESHOLD = 15; // Skip validation after this many attempts
-    const PHONE_SUFFIX_MATCH_LENGTH = 8;  // Match last 8 digits for validation
+    const VALIDATION_SKIP_THRESHOLD = 18;
+    const PHONE_SUFFIX_MATCH_LENGTH = 8;
     
-    // VALIDAÇÃO CRÍTICA: Verificar se chat correto foi aberto (FIX 6)
-    debugLog('Verificando se composer apareceu e chat está correto...');
     for (let i = 0; i < MAX_COMPOSER_CHECK_ATTEMPTS; i++) {
       await sleep(COMPOSER_CHECK_DELAY_MS);
       const composer = findComposer();
+      
       if (composer) {
-        // Verify we're in the correct chat by checking header/title
-        // This helps prevent sending to wrong chat if another tab was focused
         const currentTitle = getChatTitle();
         const titleDigits = currentTitle.replace(/\D/g, '');
         
+        debugLog(`  Attempt ${i+1}: Title="${currentTitle}", Digits=${titleDigits}`);
+        
         // Check if current chat contains the target digits
-        // We match the last N digits to handle international prefixes flexibly
         const isCorrectChat = titleDigits.includes(digits.slice(-PHONE_SUFFIX_MATCH_LENGTH)) || 
                              digits.includes(titleDigits.slice(-PHONE_SUFFIX_MATCH_LENGTH)) ||
                              titleDigits === digits;
         
-        // Skip validation after threshold to avoid infinite waiting
-        // This is a fallback in case chat title doesn't include phone number
         if (isCorrectChat || i > VALIDATION_SKIP_THRESHOLD) {
-          debugLog('✅ Chat aberto com sucesso (composer encontrado)');
+          debugLog('✅ Chat opened successfully!');
           debugLog('   Chat title:', currentTitle);
           debugLog('   Target digits:', digits);
           if (!isCorrectChat) {
@@ -1215,12 +1367,51 @@ async function attachMediaAndDraft(mediaPayload, captionText) {
           return true;
         }
         
-        debugLog(`⚠️ Chat aberto mas título não corresponde (${currentTitle} vs ${digits}), tentando novamente...`);
+        if (i % 5 === 0 && i > 0) {
+          debugLog(`  ⏳ Still validating... (attempt ${i+1}/${MAX_COMPOSER_CHECK_ATTEMPTS})`);
+        }
       }
     }
     
-    debugLog('❌ Chat não abriu ou não corresponde ao número correto');
-    throw new Error('Chat não abriu (composer não encontrado ou chat incorreto).');
+    debugLog('❌ Chat validation failed');
+    throw new Error('Chat não abriu ou não corresponde ao número correto.');
+  }
+
+  async function openChatByUrl(digits) {
+    debugLog('🌐 Opening chat via URL method...');
+    debugLog('  Phone number:', digits);
+    
+    // Validate phone number contains only digits (security check)
+    const cleanDigits = String(digits).replace(/\D/g, '');
+    if (!cleanDigits || cleanDigits.length < 8) {
+      throw new Error('Invalid phone number for URL method');
+    }
+    
+    // Additional security check: ensure it's a reasonable phone number length
+    if (cleanDigits.length > 15) {
+      throw new Error('Phone number too long (max 15 digits)');
+    }
+    
+    // Format: https://web.whatsapp.com/send?phone=XXXXXXXXXX
+    // Use encodeURIComponent for extra safety
+    const url = `https://web.whatsapp.com/send?phone=${encodeURIComponent(cleanDigits)}`;
+    debugLog('  URL:', url);
+    
+    // Navigate to the URL
+    window.location.href = url;
+    
+    // Wait for navigation and chat to load
+    debugLog('  Waiting for chat to load after URL navigation...');
+    await sleep(3000);
+    
+    // Validate chat loaded
+    const composer = await findElementWithRetry('composer', 15, 400);
+    if (!composer) {
+      throw new Error('Chat did not load after URL navigation');
+    }
+    
+    debugLog('✅ Chat loaded via URL');
+    return true;
   }
 
   // -------------------------
