@@ -1,651 +1,1134 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WhatsHybrid Lite - Centralize. Atendimento. Automatizado.</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- AOS Animation Library -->
-  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-  
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WA Hybrid CRM Quantum | A Evolução do Varejo Digital</title>
     
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    <!-- Google Fonts: Orbitron + Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #2d1b4e 100%);
-      color: #fff;
-      overflow-x: hidden;
-      cursor: none;
-    }
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    #custom-cursor {
-      position: fixed; width: 20px; height: 20px;
-      border: 2px solid #a855f7; border-radius: 50%;
-      pointer-events: none; z-index: 9999;
-      transition: all 0.1s ease; transform: translate(-50%, -50%);
-    }
-    #custom-cursor.active { width: 40px; height: 40px; background: rgba(168, 85, 247, 0.2); }
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     
-    #neural-canvas {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 0; pointer-events: none;
-    }
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     
-    .glass {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-    }
-    
-    .glass-strong {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .btn-purple {
-      background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
-      padding: 16px 48px; border-radius: 12px;
-      font-weight: 600; font-size: 18px; border: none;
-      cursor: pointer; transition: all 0.3s ease;
-      box-shadow: 0 10px 40px rgba(168, 85, 247, 0.4);
-      position: relative; overflow: hidden; color: white;
-    }
-    
-    .btn-purple:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 15px 50px rgba(168, 85, 247, 0.6);
-    }
-    
-    .btn-purple::before {
-      content: ''; position: absolute; top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      transition: left 0.5s;
-    }
-    
-    .btn-purple:hover::before { left: 100%; }
-    
-    .modal {
-      display: none; position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
-      z-index: 1000; justify-content: center; align-items: center;
-    }
-    
-    .modal.active { display: flex; }
-    
-    .modal-content {
-      background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 100%);
-      padding: 40px; border-radius: 20px;
-      max-width: 90vw; max-height: 90vh; overflow-y: auto;
-      border: 2px solid rgba(168, 85, 247, 0.3);
-      position: relative;
-    }
-    
-    .tabs {
-      display: flex; gap: 10px; margin-bottom: 30px;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-      overflow-x: auto;
-    }
-    
-    .tab {
-      padding: 12px 24px; background: transparent;
-      border: none; color: rgba(255, 255, 255, 0.6);
-      cursor: pointer; transition: all 0.3s;
-      border-bottom: 3px solid transparent;
-      white-space: nowrap;
-    }
-    
-    .tab.active { color: #a855f7; border-bottom-color: #a855f7; }
-    
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    
-    .input-field {
-      width: 100%; padding: 12px 16px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px; color: #fff; margin-bottom: 16px;
-    }
-    
-    .input-field:focus {
-      outline: none; border-color: #a855f7;
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
-    }
-    
-    @keyframes wave {
-      0%, 100% { transform: translateX(0); }
-      50% { transform: translateX(-25%); }
-    }
-    .wave-bg { animation: wave 10s linear infinite; }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-20px); }
-    }
-    .robot { animation: float 3s ease-in-out infinite; }
-    
-    .tilt-card { transition: transform 0.3s ease; }
-    .tilt-card:hover { transform: perspective(1000px) rotateY(5deg) rotateX(5deg); }
-    
-    .progress-bar {
-      width: 100%; height: 8px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px; overflow: hidden;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #a855f7, #ec4899);
-      transition: width 0.3s ease;
-    }
-    
-    .status-icon {
-      display: inline-block; width: 20px; height: 20px;
-      border-radius: 50%; margin-right: 8px;
-    }
-    
-    .status-success { background: #10b981; }
-    .status-error { background: #ef4444; }
-    .status-pending { background: #f59e0b; }
-    
-    ::-webkit-scrollbar { width: 10px; }
-    ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-    ::-webkit-scrollbar-thumb { background: #a855f7; border-radius: 5px; }
-    
-    a, button, input, textarea, select { cursor: none; }
-    
-    .btn-sm { padding: 8px 20px; font-size: 14px; }
-  </style>
+    <style>
+        :root {
+            --brand-purple: #6f00ff;
+            --brand-cyan: #00ffff;
+            --brand-dark: #030014;
+            --brand-surface: #0f0c29;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--brand-dark);
+            color: #fff;
+            overflow-x: hidden;
+            cursor: none;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        /* Preloader */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--brand-dark);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        
+        #preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .preloader-ring {
+            width: 100px;
+            height: 100px;
+            border: 4px solid rgba(111, 0, 255, 0.1);
+            border-top: 4px solid var(--brand-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .preloader-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 20px;
+            letter-spacing: 8px;
+            background: linear-gradient(90deg, var(--brand-cyan), #fff, var(--brand-purple));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-shift 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes gradient-shift {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+        
+        /* Custom Cursor */
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.15s ease;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+        
+        .cursor-dot {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+        
+        .cursor.active {
+            width: 40px;
+            height: 40px;
+        }
+        
+        /* Neural Canvas */
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        /* Scanlines Overlay */
+        #scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            animation: scanlines-move 8s linear infinite;
+        }
+        
+        @keyframes scanlines-move {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+        
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(15, 12, 41, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-strong {
+            background: rgba(15, 12, 41, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Glow Effects */
+        .glow-text {
+            text-shadow: 0 0 20px var(--brand-cyan), 0 0 40px var(--brand-cyan);
+        }
+        
+        .glow-purple {
+            box-shadow: 0 0 20px var(--brand-purple), 0 0 40px var(--brand-purple);
+        }
+        
+        .glow-cyan {
+            box-shadow: 0 0 20px var(--brand-cyan), 0 0 40px var(--brand-cyan);
+        }
+        
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, var(--brand-cyan) 0%, #fff 50%, var(--brand-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Float Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Tilt 3D Effect */
+        .tilt-card {
+            transition: transform 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .tilt-card:hover {
+            transform: perspective(1000px) rotateY(var(--rotate-y, 0deg)) rotateX(var(--rotate-x, 0deg));
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--brand-purple) 0%, #9f00ff 100%);
+            padding: 16px 48px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--brand-purple), 0 0 60px var(--brand-purple);
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .btn-secondary {
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid var(--brand-cyan);
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--brand-cyan);
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--brand-cyan);
+            color: var(--brand-dark);
+            box-shadow: 0 0 20px var(--brand-cyan);
+        }
+        
+        /* Badge */
+        .badge-online {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--brand-cyan);
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            animation: pulse 2s ease-in-out infinite;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: calc(100% - 40px);
+            max-width: 1200px;
+        }
+        
+        .nav-container {
+            border-radius: 50px;
+            padding: 16px 32px;
+        }
+        
+        /* Marquee */
+        .marquee {
+            overflow: hidden;
+            position: relative;
+            background: rgba(0, 255, 255, 0.05);
+            padding: 20px 0;
+            margin: 40px 0;
+        }
+        
+        .marquee-content {
+            display: flex;
+            animation: marquee 30s linear infinite;
+        }
+        
+        .marquee-item {
+            flex-shrink: 0;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, var(--brand-surface) 0%, #1a0f3f 100%);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 2px solid rgba(111, 0, 255, 0.3);
+            position: relative;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .tab.active {
+            color: var(--brand-cyan);
+            border-bottom-color: var(--brand-cyan);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Form Fields */
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            margin-bottom: 16px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--brand-cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--brand-purple), var(--brand-cyan));
+            transition: width 0.3s ease;
+        }
+        
+        /* Status Icons */
+        .status-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success { background: #10b981; }
+        .status-error { background: #ef4444; }
+        .status-pending { background: #f59e0b; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--brand-purple);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--brand-cyan);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                width: calc(100% - 20px);
+                top: 10px;
+            }
+            
+            .nav-container {
+                padding: 12px 20px;
+            }
+            
+            h1 {
+                font-size: 2.5rem !important;
+            }
+            
+            .btn-primary {
+                padding: 12px 32px;
+                font-size: 16px;
+            }
+        }
+        
+        /* Background Gradients */
+        .bg-gradient-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 500px;
+            background: radial-gradient(circle at 50% 0%, rgba(111, 0, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .bg-gradient-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 500px;
+            background: radial-gradient(circle at 50% 100%, rgba(0, 255, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        /* Card Hover Glow */
+        .card-glow {
+            transition: all 0.3s ease;
+        }
+        
+        .card-glow:hover {
+            box-shadow: 0 0 30px rgba(111, 0, 255, 0.4), 0 0 60px rgba(0, 255, 255, 0.2);
+            border-color: rgba(111, 0, 255, 0.5);
+        }
+        
+        /* Pricing Card */
+        .pricing-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 40px rgba(111, 0, 255, 0.5);
+        }
+        
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 64px;
+            height: 32px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 34px;
+            transition: 0.4s;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.4s;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--brand-purple);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(32px);
+        }
+        
+        /* Robot Animation */
+        .robot {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Wave Animation */
+        @keyframes wave {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-25%); }
+        }
+        
+        .wave-bg {
+            animation: wave 10s linear infinite;
+        }
+        
+        a, button, input, textarea, select {
+            cursor: none;
+        }
+    </style>
 </head>
 <body>
-  <div id="custom-cursor"></div>
-  <canvas id="neural-canvas"></canvas>
-  
-  <div class="relative z-10">
-    <nav class="fixed top-0 w-full glass-strong z-50 py-4 px-6">
-      <div class="container mx-auto flex justify-between items-center">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center font-bold text-xl">
-            WH
-          </div>
-          <span class="text-xl font-bold">WhatsHybrid Lite</span>
-        </div>
-        <div class="flex gap-4 items-center">
-          <button onclick="openLoginModal()" class="text-sm px-4 py-2 rounded-lg glass hover:glass-strong transition">
-            Entrar
-          </button>
-          <button class="btn-purple btn-sm" onclick="installExtension()">
-            Instalar Extensão
-          </button>
-        </div>
-      </div>
-    </nav>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="preloader-ring"></div>
+        <div class="preloader-text">LOAD</div>
+    </div>
     
-    <section class="min-h-screen flex items-center justify-center pt-20 px-6" data-aos="fade-up">
-      <div class="text-center max-w-4xl">
-        <h1 class="text-7xl font-black mb-6 leading-tight">
-          Centralize.<br>
-          Atendimento.<br>
-          <span class="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-            Automatizado.
-          </span>
-        </h1>
-        <p class="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-          Inteligência artificial híbrida que aprende com cada conversa e transforma seu atendimento no WhatsApp
-        </p>
-        <button onclick="openTrainingPanel()" class="btn-purple">
-          🤖 Treinar SmartBot
-        </button>
-      </div>
-    </section>
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-dot"></div>
     
-    <section class="container mx-auto px-6 py-20" data-aos="fade-up">
-      <div class="grid md:grid-cols-3 gap-6">
-        <div class="glass p-8 rounded-2xl tilt-card">
-          <div class="text-4xl mb-4">🏢</div>
-          <h3 class="text-2xl font-bold mb-3">Sobre o Negócio</h3>
-          <p class="text-gray-300 mb-4">
-            Sincronizado com banco de dados para personalização total do atendimento
-          </p>
-          <div class="text-sm text-purple-400">
-            <i data-lucide="database" class="inline w-4 h-4"></i> 
-            Integrado ao sistema
-          </div>
-        </div>
-        
-        <div class="glass p-8 rounded-2xl tilt-card">
-          <div class="text-4xl mb-4">🧠</div>
-          <h3 class="text-2xl font-bold mb-3">Memória Neural</h3>
-          <p class="text-gray-300 mb-4">
-            Histórico completo de aprendizados e interações com clientes
-          </p>
-          <div class="text-sm text-purple-400">
-            <i data-lucide="brain" class="inline w-4 h-4"></i> 
-            Aprendizado contínuo
-          </div>
-        </div>
-        
-        <div class="glass p-8 rounded-2xl tilt-card">
-          <div class="text-4xl mb-4">��</div>
-          <h3 class="text-2xl font-bold mb-3">Base de Dados</h3>
-          <p class="text-gray-300 mb-4">
-            Integração com módulos de catálogo, FAQ e respostas rápidas
-          </p>
-          <div class="text-sm text-purple-400">
-            <i data-lucide="layers" class="inline w-4 h-4"></i> 
-            Multi-módulos
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Neural Canvas -->
+    <canvas id="neural-canvas"></canvas>
     
-    <!-- Robots Section -->
-    <section class="container mx-auto px-6 py-20" data-aos="fade-up">
-      <div class="glass-strong p-12 rounded-3xl relative overflow-hidden" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);">
-        <div class="absolute inset-0 opacity-20 wave-bg">
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="w-full h-full">
-            <path d="M0,0 C150,100 350,0 600,50 C850,100 1050,0 1200,50 L1200,120 L0,120 Z" fill="url(#wave-gradient)"/>
-            <defs>
-              <linearGradient id="wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        
-        <h2 class="text-4xl font-bold text-center mb-12 relative z-10">
-          🤖 Simulação de Conversa Entre Robôs
-        </h2>
-        
-        <div class="grid md:grid-cols-3 gap-8 items-center relative z-10">
-          <div class="text-center">
-            <div class="robot mb-6">
-              <svg width="120" height="120" viewBox="0 0 120 120" class="mx-auto">
-                <circle cx="60" cy="60" r="50" fill="#a855f7" opacity="0.3"/>
-                <rect x="35" y="40" width="50" height="40" rx="10" fill="#a855f7"/>
-                <circle cx="50" cy="55" r="5" fill="#fff"/>
-                <circle cx="70" cy="55" r="5" fill="#fff"/>
-                <rect x="40" y="70" width="40" height="3" rx="2" fill="#fff"/>
-                <rect x="50" y="30" width="20" height="10" rx="5" fill="#a855f7"/>
-              </svg>
-            </div>
-            
-            <select id="robot1Profile" class="input-field text-center">
-              <option value="">Selecionar Perfil</option>
-              <option value="dono">👔 Dono</option>
-              <option value="gerente">👨‍💼 Gerente</option>
-              <option value="vendedor">🛍️ Vendedor</option>
-              <option value="suporte">🎧 Suporte</option>
-            </select>
-            
-            <button onclick="connectWhatsApp(1)" class="btn-purple w-full mt-4 btn-sm" id="connectBtn1">
-              📱 Conectar WhatsApp
-            </button>
-            
-            <div id="robot1Status" class="mt-4 text-sm text-gray-400">Desconectado</div>
-            
-            <div class="glass p-4 mt-6 rounded-xl relative">
-              <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-purple-500"></div>
-              <p class="text-sm">Olá! Como posso ajudar?</p>
-            </div>
-          </div>
-          
-          <div class="glass-strong p-6 rounded-3xl max-w-xs mx-auto">
-            <div class="bg-black rounded-2xl overflow-hidden">
-              <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-4 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-white/20"></div>
-                <div>
-                  <div class="font-bold text-sm">Conversa Bot</div>
-                  <div class="text-xs text-white/70">online</div>
-                </div>
-              </div>
-              
-              <div class="p-4 space-y-3 h-64 overflow-y-auto bg-gradient-to-b from-gray-900 to-gray-800" id="chatSimulation">
-                <div class="text-center text-xs text-gray-500">
-                  Defina o assunto e clique em "Iniciar Conversa"
-                </div>
-              </div>
-              
-              <div class="p-3 bg-gray-900 flex gap-2">
-                <input type="text" id="conversationTopic" placeholder="Assunto da conversa..." class="flex-1 bg-gray-800 text-white px-3 py-2 rounded-full text-sm" />
-                <button onclick="startRobotConversation()" id="startConversationBtn" disabled class="bg-purple-600 px-4 py-2 rounded-full text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed">
-                  ▶️
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div class="text-center">
-            <div class="robot mb-6">
-              <svg width="120" height="120" viewBox="0 0 120 120" class="mx-auto">
-                <circle cx="60" cy="60" r="50" fill="#ec4899" opacity="0.3"/>
-                <rect x="35" y="40" width="50" height="40" rx="10" fill="#ec4899"/>
-                <circle cx="50" cy="55" r="5" fill="#fff"/>
-                <circle cx="70" cy="55" r="5" fill="#fff"/>
-                <path d="M 45 70 Q 60 80 75 70" stroke="#fff" stroke-width="3" fill="none"/>
-                <rect x="50" y="30" width="20" height="10" rx="5" fill="#ec4899"/>
-              </svg>
-            </div>
-            
-            <select id="robot2Profile" class="input-field text-center">
-              <option value="">Selecionar Perfil</option>
-              <option value="dono">👔 Dono</option>
-              <option value="gerente">👨‍💼 Gerente</option>
-              <option value="vendedor">🛍️ Vendedor</option>
-              <option value="suporte">🎧 Suporte</option>
-            </select>
-            
-            <button onclick="connectWhatsApp(2)" class="btn-purple w-full mt-4 btn-sm" id="connectBtn2">
-              📱 Conectar WhatsApp
-            </button>
-            
-            <div id="robot2Status" class="mt-4 text-sm text-gray-400">Desconectado</div>
-            
-            <div class="glass p-4 mt-6 rounded-xl relative">
-              <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-pink-500"></div>
-              <p class="text-sm">Estou aqui para ajudar!</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Scanlines Overlay -->
+    <div id="scanlines"></div>
     
-    <!-- Features Section -->
-    <section class="container mx-auto px-6 py-20" data-aos="fade-up">
-      <h2 class="text-5xl font-bold text-center mb-16">
-        Tecnologia <span class="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Híbrida</span>
-      </h2>
-      
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="glass-strong p-8 rounded-2xl tilt-card">
-          <div class="text-5xl mb-6">🧠</div>
-          <h3 class="text-2xl font-bold mb-4">Neural AI Response</h3>
-          <p class="text-gray-300 mb-6">
-            IA que aprende continuamente com cada interação, melhorando suas respostas automaticamente
-          </p>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li>✓ Aprendizado incremental</li>
-            <li>✓ Memória de contexto</li>
-            <li>✓ Personalização automática</li>
-          </ul>
-        </div>
-        
-        <div class="glass-strong p-8 rounded-2xl tilt-card">
-          <div class="text-5xl mb-6">📊</div>
-          <h3 class="text-2xl font-bold mb-4">CRM Híbrido Visual</h3>
-          <p class="text-gray-300 mb-6">
-            Gestão completa de clientes com dashboards visuais e relatórios em tempo real
-          </p>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li>✓ Rastreamento de conversas</li>
-            <li>✓ Análise de sentimento</li>
-            <li>✓ Métricas de desempenho</li>
-          </ul>
-        </div>
-        
-        <div class="glass-strong p-8 rounded-2xl tilt-card">
-          <div class="text-5xl mb-6">⚡</div>
-          <h3 class="text-2xl font-bold mb-4">Automação Infinita</h3>
-          <p class="text-gray-300 mb-6">
-            Crie fluxos complexos de automação sem limites de criatividade
-          </p>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li>✓ Fluxos personalizados</li>
-            <li>✓ Triggers inteligentes</li>
-            <li>✓ Integração API</li>
-          </ul>
-        </div>
-      </div>
-    </section>
+    <!-- Background Gradients -->
+    <div class="bg-gradient-top"></div>
+    <div class="bg-gradient-bottom"></div>
     
-    <!-- WhatsApp Sending Panel (3D Block) -->
-    <section class="container mx-auto px-6 py-20" data-aos="fade-up">
-      <div class="glass-strong p-12 rounded-3xl" style="transform: perspective(1000px) rotateX(2deg);">
-        <h2 class="text-4xl font-bold text-center mb-12">
-          �� Painel de Envio via WhatsApp
-        </h2>
-        
-        <div class="grid md:grid-cols-2 gap-8">
-          <div class="space-y-6">
-            <div>
-              <label class="block text-sm font-bold mb-2">📋 Lista de Números</label>
-              <textarea id="phoneList" rows="5" class="input-field" placeholder="5511999999999&#10;5511888888888&#10;5511777777777"></textarea>
-              <p class="text-xs text-gray-400 mt-1">Um número por linha (com DDI e DDD)</p>
-            </div>
-            
-            <div>
-              <label class="block text-sm font-bold mb-2">💬 Mensagem</label>
-              <div class="relative">
-                <textarea id="messageContent" rows="4" class="input-field" placeholder="Digite sua mensagem..."></textarea>
-                <button onclick="addMedia()" class="absolute bottom-4 right-4 bg-purple-600 w-10 h-10 rounded-full flex items-center justify-center hover:bg-purple-700">
-                  +
-                </button>
-              </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-bold mb-2">⏱️ Intervalo (segundos)</label>
-                <input type="number" id="sendInterval" class="input-field" value="5" min="1" />
-              </div>
-              <div>
-                <label class="block text-sm font-bold mb-2">🔌 Canal</label>
-                <select id="sendChannel" class="input-field">
-                  <option value="dom">DOM (Web)</option>
-                  <option value="api">API Oficial</option>
-                </select>
-              </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-bold mb-2">🤖 Modelo IA</label>
-                <select id="aiModel" class="input-field">
-                  <option value="gpt-3.5">GPT-3.5</option>
-                  <option value="gpt-4">GPT-4</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-bold mb-2">📡 Modo de Envio</label>
-                <select id="sendMode" class="input-field">
-                  <option value="immediate">Imediato</option>
-                  <option value="scheduled">Agendado</option>
-                </select>
-              </div>
-            </div>
-            
-            <button onclick="generateLinks()" class="btn-purple w-full">
-              🔗 Gerar Links
-            </button>
-          </div>
-          
-          <div class="space-y-6">
-            <div class="glass p-6 rounded-xl">
-              <h3 class="text-lg font-bold mb-4">🔗 Prévia dos Links</h3>
-              <div id="linksPreview" class="space-y-2 max-h-48 overflow-y-auto">
-                <p class="text-sm text-gray-400">Clique em "Gerar Links" para visualizar</p>
-              </div>
-            </div>
-            
-            <div class="glass p-6 rounded-xl">
-              <h3 class="text-lg font-bold mb-4">👁️ Prévia de Envio</h3>
-              <div class="bg-gradient-to-r from-green-900/30 to-green-800/30 p-4 rounded-lg border border-green-500/30">
-                <div class="flex items-start gap-3">
-                  <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                    📱
-                  </div>
-                  <div class="flex-1">
-                    <div class="font-bold text-sm mb-1">Mensagem WhatsApp</div>
-                    <div id="messagePreview" class="text-sm text-gray-300">
-                      Sua mensagem aparecerá aqui...
+    <!-- Main Content -->
+    <div class="relative z-10">
+        <!-- Navbar -->
+        <nav>
+            <div class="nav-container glass-panel">
+                <div class="container mx-auto flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-cyan-500 rounded-lg flex items-center justify-center font-bold text-xl" style="font-family: 'Orbitron', sans-serif;">
+                            WH
+                        </div>
+                        <span class="text-xl font-bold" style="font-family: 'Orbitron', sans-serif;">WA Hybrid CRM Quantum</span>
                     </div>
-                  </div>
+                    <div class="flex gap-4 items-center">
+                        <button onclick="openLoginModal()" class="btn-secondary text-sm">
+                            Entrar
+                        </button>
+                        <button class="btn-primary text-sm" style="padding: 12px 24px; font-size: 14px;" onclick="installExtension()">
+                            Instalar Extensão
+                        </button>
+                    </div>
                 </div>
-              </div>
-              
-              <div class="grid grid-cols-2 gap-4 mt-4">
-                <div class="text-center">
-                  <div class="text-2xl font-bold text-purple-400" id="totalContacts">0</div>
-                  <div class="text-xs text-gray-400">Total de Contatos</div>
-                </div>
-                <div class="text-center">
-                  <div class="text-2xl font-bold text-pink-400" id="estimatedTime">0s</div>
-                  <div class="text-xs text-gray-400">Tempo Estimado</div>
-                </div>
-              </div>
             </div>
-            
-            <div class="glass p-6 rounded-xl">
-              <h3 class="text-lg font-bold mb-4">📊 Status dos Envios</h3>
-              <div id="sendStatus" class="space-y-2 max-h-48 overflow-y-auto">
-                <p class="text-sm text-gray-400">Aguardando início do envio...</p>
-              </div>
+        </nav>
+        
+        <!-- Hero Section -->
+        <section class="min-h-screen flex items-center justify-center pt-32 px-6" data-aos="fade-up">
+            <div class="text-center max-w-5xl">
+                <div class="mb-8">
+                    <span class="badge-online">⚡ SYSTEM ONLINE v3.0</span>
+                </div>
+                <h1 class="text-8xl font-black mb-6 leading-tight gradient-text glow-text" style="font-family: 'Orbitron', sans-serif;">
+                    A EVOLUÇÃO<br>
+                    DO VAREJO<br>
+                    DIGITAL
+                </h1>
+                <p class="text-xl text-gray-300 mb-12 max-w-3xl mx-auto" style="font-family: 'Inter', sans-serif;">
+                    Inteligência artificial híbrida que aprende com cada conversa e transforma seu atendimento no WhatsApp com tecnologia quantum de última geração
+                </p>
+                <div class="flex gap-4 justify-center">
+                    <button onclick="openTrainingPanel()" class="btn-primary glow-purple">
+                        🤖 Treinar SmartBot
+                    </button>
+                    <button onclick="scrollToFeatures()" class="btn-secondary">
+                        Ver Recursos
+                    </button>
+                </div>
             </div>
-            
-            <button onclick="startSending()" class="btn-purple w-full">
-              🚀 Iniciar Envio
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-    
-    <!-- Pricing Section -->
-    <section class="container mx-auto px-6 py-20" data-aos="fade-up">
-      <h2 class="text-5xl font-bold text-center mb-8">
-        Investimento <span class="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Inteligente</span>
-      </h2>
-      
-      <div class="flex justify-center items-center gap-4 mb-12">
-        <span class="text-lg" id="monthlyLabel">Mensal</span>
-        <label class="relative inline-block w-16 h-8">
-          <input type="checkbox" id="pricingToggle" class="sr-only" onchange="togglePricing()">
-          <span class="block w-full h-full bg-gray-600 rounded-full cursor-pointer transition"></span>
-          <span class="absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform"></span>
-        </label>
-        <span class="text-lg" id="annualLabel">Anual <span class="text-green-400 text-sm">(20% OFF)</span></span>
-      </div>
-      
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="glass-strong p-8 rounded-2xl">
-          <h3 class="text-2xl font-bold mb-2">Starter</h3>
-          <div class="text-4xl font-black mb-6">
-            R$ <span id="priceStarter">97</span>
-            <span class="text-lg font-normal text-gray-400">/mês</span>
-          </div>
-          <ul class="space-y-3 mb-8 text-sm">
-            <li>✓ 1.000 mensagens/mês</li>
-            <li>✓ 1 atendente IA</li>
-            <li>✓ Respostas rápidas</li>
-            <li>✓ FAQ básico</li>
-            <li>✓ Suporte por email</li>
-          </ul>
-          <button class="w-full py-3 bg-purple-600 rounded-lg font-bold hover:bg-purple-700 transition">
-            Começar Agora
-          </button>
+        </section>
+        
+        <!-- Social Proof Marquee -->
+        <div class="marquee">
+            <div class="marquee-content">
+                <div class="marquee-item">⚡ +10.000 empresas conectadas</div>
+                <div class="marquee-item">🚀 +1M mensagens processadas/dia</div>
+                <div class="marquee-item">🧠 IA treinada em 50+ idiomas</div>
+                <div class="marquee-item">💎 99.9% uptime garantido</div>
+                <div class="marquee-item">🏆 #1 em automação WhatsApp</div>
+                <div class="marquee-item">⚡ +10.000 empresas conectadas</div>
+                <div class="marquee-item">🚀 +1M mensagens processadas/dia</div>
+                <div class="marquee-item">🧠 IA treinada em 50+ idiomas</div>
+                <div class="marquee-item">💎 99.9% uptime garantido</div>
+                <div class="marquee-item">🏆 #1 em automação WhatsApp</div>
+            </div>
         </div>
         
-        <div class="glass-strong p-8 rounded-2xl border-4 border-purple-500 relative transform scale-105">
-          <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-1 rounded-full text-sm font-bold">
-            🔥 MAIS POPULAR
-          </div>
-          <h3 class="text-2xl font-bold mb-2">Hybrid Pro</h3>
-          <div class="text-4xl font-black mb-6">
-            R$ <span id="priceHybrid">297</span>
-            <span class="text-lg font-normal text-gray-400">/mês</span>
-          </div>
-          <ul class="space-y-3 mb-8 text-sm">
-            <li>✓ 10.000 mensagens/mês</li>
-            <li>✓ 5 atendentes IA</li>
-            <li>✓ Automação infinita</li>
-            <li>✓ CRM completo</li>
-            <li>✓ API integrada</li>
-            <li>✓ Suporte prioritário</li>
-          </ul>
-          <button class="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg font-bold hover:shadow-2xl transition">
-            Escolher Pro
-          </button>
-        </div>
+        <!-- Context Blocks -->
+        <section class="container mx-auto px-6 py-20" data-aos="fade-up" id="features">
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="glass-strong p-8 rounded-2xl tilt-card card-glow" data-aos="fade-right">
+                    <div class="text-5xl mb-4">🏢</div>
+                    <h3 class="text-2xl font-bold mb-3" style="font-family: 'Orbitron', sans-serif;">Sobre o Negócio</h3>
+                    <p class="text-gray-300 mb-4">
+                        Sincronizado com banco de dados para personalização total do atendimento
+                    </p>
+                    <div class="text-sm" style="color: var(--brand-cyan);">
+                        <i data-lucide="database" class="inline w-4 h-4"></i> 
+                        Integrado ao sistema
+                    </div>
+                </div>
+                
+                <div class="glass-strong p-8 rounded-2xl tilt-card card-glow" data-aos="fade-up">
+                    <div class="text-5xl mb-4">🧠</div>
+                    <h3 class="text-2xl font-bold mb-3" style="font-family: 'Orbitron', sans-serif;">Memória Neural</h3>
+                    <p class="text-gray-300 mb-4">
+                        Histórico completo de aprendizados e interações com clientes
+                    </p>
+                    <div class="text-sm" style="color: var(--brand-cyan);">
+                        <i data-lucide="brain" class="inline w-4 h-4"></i> 
+                        Aprendizado contínuo
+                    </div>
+                </div>
+                
+                <div class="glass-strong p-8 rounded-2xl tilt-card card-glow" data-aos="fade-left">
+                    <div class="text-5xl mb-4">📚</div>
+                    <h3 class="text-2xl font-bold mb-3" style="font-family: 'Orbitron', sans-serif;">Base de Dados</h3>
+                    <p class="text-gray-300 mb-4">
+                        Integração com módulos de catálogo, FAQ e respostas rápidas
+                    </p>
+                    <div class="text-sm" style="color: var(--brand-cyan);">
+                        <i data-lucide="layers" class="inline w-4 h-4"></i> 
+                        Multi-módulos
+                    </div>
+                </div>
+            </div>
+        </section>
         
-        <div class="glass-strong p-8 rounded-2xl">
-          <h3 class="text-2xl font-bold mb-2">Agency</h3>
-          <div class="text-4xl font-black mb-6">
-            R$ <span id="priceAgency">997</span>
-            <span class="text-lg font-normal text-gray-400">/mês</span>
-          </div>
-          <ul class="space-y-3 mb-8 text-sm">
-            <li>✓ Mensagens ilimitadas</li>
-            <li>✓ Atendentes ilimitados</li>
-            <li>✓ White label</li>
-            <li>✓ Multi-empresa</li>
-            <li>✓ Servidor dedicado</li>
-            <li>✓ Suporte 24/7</li>
-          </ul>
-          <button class="w-full py-3 bg-purple-600 rounded-lg font-bold hover:bg-purple-700 transition">
-            Falar com Vendas
-          </button>
-        </div>
-      </div>
-    </section>
+        <!-- Robots Section -->
+        <section class="container mx-auto px-6 py-20" data-aos="fade-up">
+            <div class="glass-strong p-12 rounded-3xl relative overflow-hidden" style="background: linear-gradient(135deg, rgba(111, 0, 255, 0.2) 0%, rgba(0, 255, 255, 0.1) 100%);">
+                <div class="absolute inset-0 opacity-20 wave-bg">
+                    <svg viewBox="0 0 1200 120" preserveAspectRatio="none" class="w-full h-full">
+                        <path d="M0,0 C150,100 350,0 600,50 C850,100 1050,0 1200,50 L1200,120 L0,120 Z" fill="url(#wave-gradient)"/>
+                        <defs>
+                            <linearGradient id="wave-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#6f00ff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#00ffff;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                
+                <h2 class="text-4xl font-bold text-center mb-12 relative z-10" style="font-family: 'Orbitron', sans-serif;">
+                    🤖 Simulação de Conversa Entre Robôs
+                </h2>
+                
+                <div class="grid md:grid-cols-3 gap-8 items-center relative z-10">
+                    <div class="text-center">
+                        <div class="robot mb-6">
+                            <svg width="120" height="120" viewBox="0 0 120 120" class="mx-auto">
+                                <circle cx="60" cy="60" r="50" fill="#6f00ff" opacity="0.3"/>
+                                <rect x="35" y="40" width="50" height="40" rx="10" fill="#6f00ff"/>
+                                <circle cx="50" cy="55" r="5" fill="#fff"/>
+                                <circle cx="70" cy="55" r="5" fill="#fff"/>
+                                <rect x="40" y="70" width="40" height="3" rx="2" fill="#fff"/>
+                                <rect x="50" y="30" width="20" height="10" rx="5" fill="#6f00ff"/>
+                            </svg>
+                        </div>
+                        
+                        <select id="robot1Profile" class="input-field text-center">
+                            <option value="">Selecionar Perfil</option>
+                            <option value="dono">👔 Dono</option>
+                            <option value="gerente">👨‍💼 Gerente</option>
+                            <option value="vendedor">🛍️ Vendedor</option>
+                            <option value="suporte">🎧 Suporte</option>
+                        </select>
+                        
+                        <button onclick="connectWhatsApp(1)" class="btn-primary w-full mt-4" style="padding: 12px; font-size: 14px;" id="connectBtn1">
+                            📱 Conectar WhatsApp
+                        </button>
+                        
+                        <div id="robot1Status" class="mt-4 text-sm text-gray-400">Desconectado</div>
+                        
+                        <div class="glass-panel p-4 mt-6 rounded-xl relative">
+                            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent" style="border-bottom-color: var(--brand-purple);"></div>
+                            <p class="text-sm">Olá! Como posso ajudar?</p>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-strong p-6 rounded-3xl max-w-xs mx-auto">
+                        <div class="bg-black rounded-2xl overflow-hidden">
+                            <div class="p-4 flex items-center gap-3" style="background: linear-gradient(135deg, var(--brand-purple), var(--brand-cyan));">
+                                <div class="w-10 h-10 rounded-full bg-white/20"></div>
+                                <div>
+                                    <div class="font-bold text-sm">Conversa Bot</div>
+                                    <div class="text-xs text-white/70">online</div>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 space-y-3 h-64 overflow-y-auto bg-gradient-to-b from-gray-900 to-gray-800" id="chatSimulation">
+                                <div class="text-center text-xs text-gray-500">
+                                    Defina o assunto e clique em "Iniciar Conversa"
+                                </div>
+                            </div>
+                            
+                            <div class="p-3 bg-gray-900 flex gap-2">
+                                <input type="text" id="conversationTopic" placeholder="Assunto da conversa..." class="flex-1 bg-gray-800 text-white px-3 py-2 rounded-full text-sm" />
+                                <button onclick="startRobotConversation()" id="startConversationBtn" disabled style="background: var(--brand-purple); padding: 0 16px; border-radius: 50px; font-size: 12px; font-weight: bold; opacity: 0.5; cursor: not-allowed;">
+                                    ▶️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="robot mb-6">
+                            <svg width="120" height="120" viewBox="0 0 120 120" class="mx-auto">
+                                <circle cx="60" cy="60" r="50" fill="#00ffff" opacity="0.3"/>
+                                <rect x="35" y="40" width="50" height="40" rx="10" fill="#00ffff"/>
+                                <circle cx="50" cy="55" r="5" fill="#000"/>
+                                <circle cx="70" cy="55" r="5" fill="#000"/>
+                                <path d="M 45 70 Q 60 80 75 70" stroke="#000" stroke-width="3" fill="none"/>
+                                <rect x="50" y="30" width="20" height="10" rx="5" fill="#00ffff"/>
+                            </svg>
+                        </div>
+                        
+                        <select id="robot2Profile" class="input-field text-center">
+                            <option value="">Selecionar Perfil</option>
+                            <option value="dono">👔 Dono</option>
+                            <option value="gerente">👨‍💼 Gerente</option>
+                            <option value="vendedor">🛍️ Vendedor</option>
+                            <option value="suporte">🎧 Suporte</option>
+                        </select>
+                        
+                        <button onclick="connectWhatsApp(2)" class="btn-primary w-full mt-4" style="padding: 12px; font-size: 14px;" id="connectBtn2">
+                            📱 Conectar WhatsApp
+                        </button>
+                        
+                        <div id="robot2Status" class="mt-4 text-sm text-gray-400">Desconectado</div>
+                        
+                        <div class="glass-panel p-4 mt-6 rounded-xl relative">
+                            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent" style="border-bottom-color: var(--brand-cyan);"></div>
+                            <p class="text-sm">Estou aqui para ajudar!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Features Section -->
+        <section class="container mx-auto px-6 py-20" data-aos="fade-up">
+            <h2 class="text-5xl font-bold text-center mb-16" style="font-family: 'Orbitron', sans-serif;">
+                Tecnologia <span class="gradient-text">Híbrida Quantum</span>
+            </h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass-strong p-8 rounded-2xl tilt-card card-glow" data-aos="zoom-in" data-aos-delay="0">
+                    <div class="text-5xl mb-6 float">🧠</div>
+                    <h3 class="text-2xl font-bold mb-4" style="font-family: 'Orbitron', sans-serif;">Neural AI Response</h3>
+                    <p class="text-gray-300 mb-6">
+                        IA que aprende continuamente com cada interação, melhorando suas respostas automaticamente
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>✓ Aprendizado incremental</li>
+                        <li>✓ Memória de contexto</li>
+                        <li>✓ Personalização automática</li>
+                    </ul>
+                </div>
+                
+                <div class="glass-strong p-8 rounded-2xl tilt-card card-glow" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="text-5xl mb-6 float" style="animation-delay: 0.5s;">📊</div>
+                    <h3 class="text-2xl font-bold mb-4" style="font-family: 'Orbitron', sans-serif;">CRM Híbrido Visual</h3>
+                    <p class="text-gray-300 mb-6">
+                        Gestão completa de clientes com dashboards visuais e relatórios em tempo real
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>✓ Rastreamento de conversas</li>
+                        <li>✓ Análise de sentimento</li>
+                        <li>✓ Métricas de desempenho</li>
+                    </ul>
+                </div>
+                
+                <div class="glass-strong p-8 rounded-2xl tilt-card card-glow" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="text-5xl mb-6 float" style="animation-delay: 1s;">⚡</div>
+                    <h3 class="text-2xl font-bold mb-4" style="font-family: 'Orbitron', sans-serif;">Automação Infinita</h3>
+                    <p class="text-gray-300 mb-6">
+                        Crie fluxos complexos de automação sem limites de criatividade
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li>✓ Fluxos personalizados</li>
+                        <li>✓ Triggers inteligentes</li>
+                        <li>✓ Integração API</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- WhatsApp Sending Panel -->
+        <section class="container mx-auto px-6 py-20" data-aos="fade-up">
+            <div class="glass-strong p-12 rounded-3xl card-glow">
+                <h2 class="text-4xl font-bold text-center mb-12 gradient-text" style="font-family: 'Orbitron', sans-serif;">
+                    📤 Painel de Envio via WhatsApp
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold mb-2" style="font-family: 'Orbitron', sans-serif;">📋 Lista de Números</label>
+                            <textarea id="phoneList" rows="5" class="input-field" placeholder="5511999999999&#10;5511888888888&#10;5511777777777"></textarea>
+                            <p class="text-xs text-gray-400 mt-1">Um número por linha (com DDI e DDD)</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold mb-2" style="font-family: 'Orbitron', sans-serif;">💬 Mensagem</label>
+                            <div class="relative">
+                                <textarea id="messageContent" rows="4" class="input-field" placeholder="Digite sua mensagem..."></textarea>
+                                <button onclick="addMedia()" class="absolute bottom-4 right-4 w-10 h-10 rounded-full flex items-center justify-center" style="background: var(--brand-purple);">
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold mb-2" style="font-family: 'Orbitron', sans-serif;">⏱️ Intervalo (segundos)</label>
+                                <input type="number" id="sendInterval" class="input-field" value="5" min="1" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-2" style="font-family: 'Orbitron', sans-serif;">🔌 Canal</label>
+                                <select id="sendChannel" class="input-field">
+                                    <option value="dom">DOM (Web)</option>
+                                    <option value="api">API Oficial</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold mb-2" style="font-family: 'Orbitron', sans-serif;">🤖 Modelo IA</label>
+                                <select id="aiModel" class="input-field">
+                                    <option value="gpt-3.5">GPT-3.5</option>
+                                    <option value="gpt-4">GPT-4</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-2" style="font-family: 'Orbitron', sans-serif;">📡 Modo de Envio</label>
+                                <select id="sendMode" class="input-field">
+                                    <option value="immediate">Imediato</option>
+                                    <option value="scheduled">Agendado</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button onclick="generateLinks()" class="btn-primary w-full glow-purple">
+                            🔗 Gerar Links
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="glass-panel p-6 rounded-xl">
+                            <h3 class="text-lg font-bold mb-4" style="font-family: 'Orbitron', sans-serif;">🔗 Prévia dos Links</h3>
+                            <div id="linksPreview" class="space-y-2 max-h-48 overflow-y-auto">
+                                <p class="text-sm text-gray-400">Clique em "Gerar Links" para visualizar</p>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-panel p-6 rounded-xl">
+                            <h3 class="text-lg font-bold mb-4" style="font-family: 'Orbitron', sans-serif;">👁️ Prévia de Envio</h3>
+                            <div class="p-4 rounded-lg border" style="background: rgba(0, 255, 0, 0.05); border-color: rgba(0, 255, 0, 0.3);">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: var(--brand-cyan);">
+                                        📱
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-bold text-sm mb-1">Mensagem WhatsApp</div>
+                                        <div id="messagePreview" class="text-sm text-gray-300">
+                                            Sua mensagem aparecerá aqui...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold" style="color: var(--brand-purple); font-family: 'Orbitron', sans-serif;" id="totalContacts">0</div>
+                                    <div class="text-xs text-gray-400">Total de Contatos</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold" style="color: var(--brand-cyan); font-family: 'Orbitron', sans-serif;" id="estimatedTime">0s</div>
+                                    <div class="text-xs text-gray-400">Tempo Estimado</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-panel p-6 rounded-xl">
+                            <h3 class="text-lg font-bold mb-4" style="font-family: 'Orbitron', sans-serif;">📊 Status dos Envios</h3>
+                            <div id="sendStatus" class="space-y-2 max-h-48 overflow-y-auto">
+                                <p class="text-sm text-gray-400">Aguardando início do envio...</p>
+                            </div>
+                        </div>
+                        
+                        <button onclick="startSending()" class="btn-primary w-full glow-cyan">
+                            🚀 Iniciar Envio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Pricing Section -->
+        <section class="container mx-auto px-6 py-20" data-aos="fade-up">
+            <h2 class="text-5xl font-bold text-center mb-8" style="font-family: 'Orbitron', sans-serif;">
+                Investimento <span class="gradient-text">Inteligente</span>
+            </h2>
+            
+            <div class="flex justify-center items-center gap-4 mb-12">
+                <span class="text-lg" id="monthlyLabel" style="font-family: 'Orbitron', sans-serif;">Mensal</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="pricingToggle" onchange="togglePricing()">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="text-lg" id="annualLabel" style="font-family: 'Orbitron', sans-serif;">Anual <span style="color: var(--brand-cyan);" class="text-sm">(20% OFF)</span></span>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass-strong p-8 rounded-2xl pricing-card" data-aos="fade-right">
+                    <h3 class="text-2xl font-bold mb-2" style="font-family: 'Orbitron', sans-serif;">Starter</h3>
+                    <div class="text-4xl font-black mb-6" style="font-family: 'Orbitron', sans-serif;">
+                        R$ <span id="priceStarter">97</span>
+                        <span class="text-lg font-normal text-gray-400">/mês</span>
+                    </div>
+                    <ul class="space-y-3 mb-8 text-sm">
+                        <li>✓ 1.000 mensagens/mês</li>
+                        <li>✓ 1 atendente IA</li>
+                        <li>✓ Respostas rápidas</li>
+                        <li>✓ FAQ básico</li>
+                        <li>✓ Suporte por email</li>
+                    </ul>
+                    <button class="w-full py-3 rounded-lg font-bold transition" style="background: var(--brand-purple); font-family: 'Orbitron', sans-serif;">
+                        Começar Agora
+                    </button>
+                </div>
+                
+                <div class="glass-strong p-8 rounded-2xl pricing-card relative transform scale-105" style="border: 4px solid var(--brand-purple);" data-aos="fade-up">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-1 rounded-full text-sm font-bold" style="background: linear-gradient(135deg, var(--brand-purple), var(--brand-cyan)); font-family: 'Orbitron', sans-serif;">
+                        🔥 MAIS POPULAR
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2" style="font-family: 'Orbitron', sans-serif;">Quantum Pro</h3>
+                    <div class="text-4xl font-black mb-6" style="font-family: 'Orbitron', sans-serif;">
+                        R$ <span id="priceHybrid">197</span>
+                        <span class="text-lg font-normal text-gray-400">/mês</span>
+                    </div>
+                    <ul class="space-y-3 mb-8 text-sm">
+                        <li>✓ 10.000 mensagens/mês</li>
+                        <li>✓ 5 atendentes IA</li>
+                        <li>✓ Automação infinita</li>
+                        <li>✓ CRM completo</li>
+                        <li>✓ API integrada</li>
+                        <li>✓ Suporte prioritário</li>
+                    </ul>
+                    <button class="w-full py-3 rounded-lg font-bold glow-purple" style="background: linear-gradient(135deg, var(--brand-purple), var(--brand-cyan)); font-family: 'Orbitron', sans-serif;">
+                        Escolher Pro
+                    </button>
+                </div>
+                
+                <div class="glass-strong p-8 rounded-2xl pricing-card" data-aos="fade-left">
+                    <h3 class="text-2xl font-bold mb-2" style="font-family: 'Orbitron', sans-serif;">Agency</h3>
+                    <div class="text-4xl font-black mb-6" style="font-family: 'Orbitron', sans-serif;">
+                        R$ <span id="priceAgency">997</span>
+                        <span class="text-lg font-normal text-gray-400">/mês</span>
+                    </div>
+                    <ul class="space-y-3 mb-8 text-sm">
+                        <li>✓ Mensagens ilimitadas</li>
+                        <li>✓ Atendentes ilimitados</li>
+                        <li>✓ White label</li>
+                        <li>✓ Multi-empresa</li>
+                        <li>✓ Servidor dedicado</li>
+                        <li>✓ Suporte 24/7</li>
+                    </ul>
+                    <button class="w-full py-3 rounded-lg font-bold transition" style="background: var(--brand-purple); font-family: 'Orbitron', sans-serif;">
+                        Falar com Vendas
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Final CTA -->
+        <section class="container mx-auto px-6 py-20" data-aos="zoom-in">
+            <div class="glass-strong p-16 rounded-3xl text-center glow-purple">
+                <h2 class="text-5xl font-bold mb-6 gradient-text glow-text" style="font-family: 'Orbitron', sans-serif;">
+                    Pronto para Revolucionar<br>Seu Atendimento?
+                </h2>
+                <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                    Junte-se a milhares de empresas que já transformaram seus resultados com nossa plataforma
+                </p>
+                <button onclick="openTrainingPanel()" class="btn-primary glow-purple text-xl">
+                    🚀 Começar Agora Gratuitamente
+                </button>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="container mx-auto px-6 py-12 border-t" style="border-color: rgba(111, 0, 255, 0.2);">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h4 class="font-bold mb-4" style="font-family: 'Orbitron', sans-serif;">WA Hybrid CRM Quantum</h4>
+                    <p class="text-sm text-gray-400">
+                        A plataforma mais avançada de automação e IA para WhatsApp Business
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4" style="font-family: 'Orbitron', sans-serif;">Produto</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#features" class="hover:text-cyan-400 transition">Recursos</a></li>
+                        <li><a href="#" class="hover:text-cyan-400 transition">Preços</a></li>
+                        <li><a href="#" class="hover:text-cyan-400 transition">API</a></li>
+                        <li><a href="#" class="hover:text-cyan-400 transition">Integrações</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4" style="font-family: 'Orbitron', sans-serif;">Empresa</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-cyan-400 transition">Sobre</a></li>
+                        <li><a href="#" class="hover:text-cyan-400 transition">Blog</a></li>
+                        <li><a href="#" class="hover:text-cyan-400 transition">Carreiras</a></li>
+                        <li><a href="#" class="hover:text-cyan-400 transition">Contato</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4" style="font-family: 'Orbitron', sans-serif;">Legal</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-cyan-400 transition">Privacidade</a></li>
+                        <li><a href="#" class="hover:text-cyan-400 transition">Termos</a></li>
+                        <li><a href="#" class="hover:text-cyan-400 transition">Suporte</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-center text-sm text-gray-400 pt-8 border-t" style="border-color: rgba(111, 0, 255, 0.1);">
+                © 2025 WA Hybrid CRM Quantum. Todos os direitos reservados.
+            </div>
+        </footer>
+    </div>
     
-    <!-- Footer -->
-    <footer class="container mx-auto px-6 py-12 border-t border-gray-800">
-      <div class="grid md:grid-cols-4 gap-8 mb-8">
-        <div>
-          <h4 class="font-bold mb-4">WhatsHybrid Lite</h4>
-          <p class="text-sm text-gray-400">
-            A plataforma mais avançada de automação e IA para WhatsApp Business
-          </p>
-        </div>
-        <div>
-          <h4 class="font-bold mb-4">Produto</h4>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li><a href="#" class="hover:text-purple-400">Recursos</a></li>
-            <li><a href="#" class="hover:text-purple-400">Preços</a></li>
-            <li><a href="#" class="hover:text-purple-400">API</a></li>
-            <li><a href="#" class="hover:text-purple-400">Integrações</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-bold mb-4">Empresa</h4>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li><a href="#" class="hover:text-purple-400">Sobre</a></li>
-            <li><a href="#" class="hover:text-purple-400">Blog</a></li>
-            <li><a href="#" class="hover:text-purple-400">Carreiras</a></li>
-            <li><a href="#" class="hover:text-purple-400">Contato</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-bold mb-4">Legal</h4>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li><a href="#" class="hover:text-purple-400">Privacidade</a></li>
-            <li><a href="#" class="hover:text-purple-400">Termos</a></li>
-            <li><a href="#" class="hover:text-purple-400">Suporte</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="text-center text-sm text-gray-400 pt-8 border-t border-gray-800">
-        © 2025 WhatsHybrid Lite. Todos os direitos reservados.
-      </div>
-    </footer>
-    
-  </div>
-  
-  <!-- Login Modal -->
+    <!-- Login Modal -->
   <div id="loginModal" class="modal">
     <div class="modal-content max-w-md">
       <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-2xl">&times;</button>
